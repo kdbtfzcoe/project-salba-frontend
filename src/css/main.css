@@ -129,3 +129,23 @@ strong { font-weight: 700; }
 .btn--outline:hover { background: rgba(0, 102, 102, 0.05); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn:disabled:hover { transform: none; }
+
+/* Ensure the root HTML containers stretch 100% tall */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Flexbox layout for full viewport height */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic height for mobile browsers */
+}
+
+/* Pushes the footer cleanly to the bottom edge on short pages */
+.app-main {
+  flex: 1 0 auto;
+}

@@ -72,3 +72,54 @@
 }
 
 .guide__cta { margin-top: 3rem; text-align: center; }
+
+/* Table Styling */
+.table-container {
+  overflow-x: auto;
+  margin: 24px 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  text-align: center;
+}
+
+.guide-table th {
+  background-color: #0d1b2a;
+  color: #fff;
+  padding: 16px;
+  font-size: 0.85rem;
+}
+
+.guide-table td {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+/* Base Badge Style */
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Explicit Status Colors */
+.badge--safe { background-color: #d4edda; color: #155724; }      /* Green */
+.badge--monitor { background-color: #cce5ff; color: #004085; }   /* Blue */
+.badge--warning { background-color: #fff3cd; color: #856404; }   /* Yellow */
+.badge--danger { background-color: #ffe8cc; color: #e67e22; }    /* Orange */
+.badge--evacuate { background-color: #f8d7da; color: #721c24; }  /* Red */
+
+.status-pill[data-status="safe"] { background-color: #d4edda; color: #155724; }      /* Green */
+.status-pill[data-status="monitor"] { background-color: #cce5ff; color: #004085; }   /* Blue */
+.status-pill[data-status="warning"] { background-color: #fff3cd; color: #856404; }   /* Yellow */
+.status-pill[data-status="danger"] { background-color: #ffe8cc; color: #e67e22; }    /* Orange */
+.status-pill[data-status="evacuate"] { background-color: #f8d7da; color: #721c24; }  /* Red */

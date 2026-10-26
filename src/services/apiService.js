@@ -1,129 +1,109 @@
 import axios from 'axios';
-// ---------------------------------------------------------------
-// If you later build a backend, put its URL in a .env file:
-//   VITE_API_URL=http://localhost:3000
-// Until then the functions at the bottom return fake (simulated) results.
-// ---------------------------------------------------------------
 
-// ---------------------------------------------------------------
-// 1. THRESHOLDS – the 7 official water levels.
-//    "status" links each level to a color/label in STATUS below.
-// ---------------------------------------------------------------
+// System status metadata used strictly for UI colors and labels
+export const STATUS = {
+    safe: { label: 'Safe', color: 'safe', icon: 'fa-circle-check' },
+    normal: { label: 'Safe', color: 'safe', icon: 'fa-circle-check' },
+    monitor: { label: 'Monitor', color: 'monitor', icon: 'fa-eye' },
+    monitoring: { label: 'Monitor', color: 'monitor', icon: 'fa-eye' },
+    warning: { label: 'Warning', color: 'warning', icon: 'fa-triangle-exclamation' },
+    danger: { label: 'Danger', color: 'danger', icon: 'fa-radiation' },
+    evacuate: { label: 'Evacuate', color: 'evacuate', icon: 'fa-person-walking-arrow-right' }
+};
+
+// 7-Level Threshold definitions matching backend configuration
 export const THRESHOLDS = [
-  { level: 1, name: 'GUTTER',    ft: '0.67', cm: 20.42, status: 'safe',     action: 'Normal monitoring active. No alert required.' },
-  { level: 2, name: 'HALF KNEE', ft: '0.83', cm: 25.3,  status: 'monitor',  action: 'Continuous telemetry checking. Advisory logged.' },
-  { level: 3, name: 'HALF TIRE', ft: '1.08', cm: 32.92, status: 'warning',  action: 'Community warning SMS dispatched. Keep vehicles safe.' },
-  { level: 4, name: 'KNEE',      ft: '1.58', cm: 48.16, status: 'danger',   action: 'Prepare for immediate evacuation. High risk for light vehicles.' },
-  { level: 5, name: 'TIRES',     ft: '2.17', cm: 66.14, status: 'evacuate', action: 'Full barangay siren & evacuation sirens triggered.' },
-  { level: 6, name: 'WAIST',     ft: '3.08', cm: 93.88, status: 'evacuate', action: 'Severe flooding. Emergency response rescue active.' },
-  { level: 7, name: 'CHEST',     ft: '3.75', cm: 114.3, status: 'evacuate', action: 'Critical submersion level. Move to high ground immediately.' },
+    { level: 1, name: 'Gutter', ft: 0.67, cm: 20.42, status: 'safe' },
+    { level: 2, name: 'Half Knee', ft: 0.83, cm: 25.30, status: 'monitor' },
+    { level: 3, name: 'Half Tire', ft: 1.08, cm: 32.92, status: 'warning' },
+    { level: 4, name: 'Knee', ft: 1.58, cm: 48.16, status: 'danger' },
+    { level: 5, name: 'Tires', ft: 2.17, cm: 66.14, status: 'evacuate' },
+    { level: 6, name: 'Waist', ft: 3.08, cm: 93.88, status: 'evacuate' },
+    { level: 7, name: 'Chest', ft: 3.75, cm: 114.30, status: 'evacuate' }
 ];
 
-// ---------------------------------------------------------------
-// 2. STATUS: the name and icon of each alert state.
-//    The COLORS live in src/css/tokens.css, in the [data-status='...'] blocks.
-//    The keys here must match the keys in SCENARIOS and the status in THRESHOLDS.
-// ---------------------------------------------------------------
-export const STATUS = {
-  safe:     { label: 'Safe',     icon: 'fa-circle-check' },
-  monitor:  { label: 'Monitor',  icon: 'fa-eye' },
-  warning:  { label: 'Warning',  icon: 'fa-triangle-exclamation' },
-  danger:   { label: 'Danger',   icon: 'fa-radiation' },
-  evacuate: { label: 'Evacuate', icon: 'fa-bell' },
+export const formatLiveTimestamp = () => {
+    const now = new Date();
+    return `LIVE UPDATE AS OF ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
 };
 
-// ---------------------------------------------------------------
-// 3. SCENARIOS – the demo data behind the "Simulate Status" buttons.
-//    The key (safe, monitor...) matches a key in STATUS above.
-//
-//    waterLevelCm → current water height
-//    level        → which THRESHOLD we're at (1–7)
-//    rateStatus   → INCREASING | DECREASING | STABLE
-//    rateValue    → speed text
-//    nodeDesc     → sentence on the status card
-//    forecastTime → "time until the next level"
-//    path         → the SVG curve for the graph (viewBox is 800 x 300,
-//                   so a SMALLER y = HIGHER water)
-//    pointY       → y position of the dot on that curve
-//    tooltipTop   → vertical position of the tooltip box
-// ---------------------------------------------------------------
-export const SCENARIOS = {
-  safe: {
-    waterLevelCm: 15.2, level: 1,
-    rateStatus: 'STABLE', rateValue: '0.00 cm/min',
-    nodeDesc: 'Water level below Gutter Level. All clear.',
-    forecastTime: 'No Breach',
-    path: 'M 0 280 Q 200 282, 400 278 T 800 280',
-    pointY: 279, tooltipTop: '88%',
-  },
-  monitor: {
-    waterLevelCm: 25.3, level: 2,
-    rateStatus: 'INCREASING', rateValue: '+1.20 cm/min',
-    nodeDesc: 'Water reached Half Knee Level. Continuous monitoring active.',
-    forecastTime: '6 mins',
-    path: 'M 0 270 Q 200 260, 400 240 T 800 220',
-    pointY: 230, tooltipTop: '72%',
-  },
-  warning: {
-    waterLevelCm: 32.92, level: 3,
-    rateStatus: 'INCREASING', rateValue: '+2.10 cm/min',
-    nodeDesc: 'Water elevated past Half Tire mark. Community advisories sent.',
-    forecastTime: '7 mins',
-    path: 'M 0 250 Q 150 240, 350 210 T 800 180',
-    pointY: 190, tooltipTop: '60%',
-  },
-  danger: {
-    waterLevelCm: 48.16, level: 4,
-    rateStatus: 'INCREASING', rateValue: '+2.80 cm/min',
-    nodeDesc: 'Water reached Knee Level. Prepare for immediate evacuation.',
-    forecastTime: '2 mins',
-    path: 'M 0 250 Q 100 245, 200 230 T 400 200 T 600 160 T 800 145',
-    pointY: 160, tooltipTop: '50%',
-  },
-  evacuate: {
-    waterLevelCm: 78.5, level: 5,
-    rateStatus: 'INCREASING', rateValue: '+3.50 cm/min',
-    nodeDesc: 'Severe flooding. Immediate barangay sirens & rescue active.',
-    forecastTime: '4 mins',
-    path: 'M 0 200 Q 100 170, 200 120 T 400 80 T 600 45 T 800 25',
-    pointY: 45, tooltipTop: '18%',
-  },
+/**
+ * Dynamically converts any raw water level (cm) from the ESP32/Database
+ * into SVG wave paths, height positions, and tooltip coordinates.
+ */
+export const calculateGraphGeometry = (waterLevelCm = 0) => {
+    const maxCm = 130; 
+    const clampedCm = Math.min(Math.max(waterLevelCm, 0), maxCm);
+    
+    // Map water level height to SVG canvas height
+    const pointY = Math.round(280 - (clampedCm / maxCm) * 240);
+    const path = `M 0 ${pointY} Q 200 ${pointY + 8} 400 ${pointY - 8} T 800 ${pointY}`;
+    const tooltipTop = `${Math.max(pointY - 45, 10)}px`;
+
+    let level = 1;
+    if (clampedCm >= 114.30) level = 7;
+    else if (clampedCm >= 93.88) level = 6;
+    else if (clampedCm >= 66.14) level = 5;
+    else if (clampedCm >= 48.16) level = 4;
+    else if (clampedCm >= 32.92) level = 3;
+    else if (clampedCm >= 25.30) level = 2;
+
+    return {
+        waterLevelCm: clampedCm,
+        level,
+        pointY,
+        path,
+        tooltipTop
+    };
 };
 
-// ---------------------------------------------------------------
-// 4. Helper: builds "LIVE UPDATE AS OF: OCTOBER 26, 2026 AT 11:04 PM"
-// ---------------------------------------------------------------
-export function formatLiveTimestamp(date = new Date()) {
-  const day = date
-    .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-    .toUpperCase();
-  const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  return `LIVE UPDATE AS OF: ${day} AT ${time}`;
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
-// ---------------------------------------------------------------
-// Backend connection. Set the URL in a .env file (see 12c).
-// With no URL set, the functions below return fake results so the
-// site still works as a demo.
-// ---------------------------------------------------------------
-const API_URL = import.meta.env.VITE_API_URL;
+const API = axios.create({
+    baseURL: API_BASE_URL,
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 10000
+});
 
-// One shared axios instance: every request uses the same base URL and timeout.
-const api = axios.create({ baseURL: API_URL, timeout: 10000 });
+export const getLiveTelemetry = async () => {
+    const response = await API.get('/telemetry/live');
+    return response.data;
+};
 
-// Gets the latest sensor reading. Returns null while there's no API.
-export async function fetchLatestReading() {
-  if (!API_URL) return null;
-  const { data } = await api.get('/api/readings/latest');
-  return data;
-}
+export const getTimeToBreach = async () => {
+    const response = await API.get('/telemetry/live');
+    // Return backend forecast object
+    return response.data.forecast || { estimatedMinutes: null, message: 'Water level stable.' };
+};
 
-// Sends the register form data. Pretends to succeed while there's no API.
-export async function registerSubscriber(payload) {
-  if (!API_URL) {
-    await new Promise((resolve) => setTimeout(resolve, 600)); // fake loading time
-    return { ok: true };
-  }
-  const { data } = await api.post('/api/subscribers', payload);
-  return data;
-}
+/**
+ * Register a community subscriber for flood SMS alerts
+ * @param {Object} subscriberData - { name, mobile, address, latitude, longitude }
+ */
+export const registerSubscriber = async (subscriberData) => {
+    try {
+        const payload = {
+            name: subscriberData.name,
+            phone: subscriberData.mobile ? `+63${subscriberData.mobile}` : subscriberData.phone,
+            address: subscriberData.address,
+            latitude: subscriberData.latitude || null,
+            longitude: subscriberData.longitude || null
+        };
+        
+        const response = await API.post('/users/register', payload);
+        return response.data;
+    } catch (error) {
+        // Multi-tier extraction: checks response payload, axios error message, or fallback
+        const serverMessage = 
+            error.response?.data?.message || 
+            error.response?.data?.error ||
+            error.message || 
+            'Something went wrong. Please try again.';
+            
+        throw new Error(serverMessage);
+    }
+};
+
+export { registerSubscriber as registerUser };
+
+export default API;

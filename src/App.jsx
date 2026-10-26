@@ -20,12 +20,11 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    // flex-col + flex-1 on <main> keeps the footer at the bottom on short pages
-    <div className="min-h-screen flex flex-col">
+    <div className="app-layout">
       <ScrollToTop />
       <Navbar />
 
-      <main className="flex-1">
+      <main className="app-main">
         {/* Each Route = one URL → one page component */}
         <Routes>
           <Route path="/" element={<LandingPage />} />

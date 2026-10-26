@@ -1,35 +1,39 @@
+import React from 'react';
 import { THRESHOLDS, STATUS } from '../../services/apiService';
 import '../../css/components/WaveGraph.css';
 
-// Time labels along the bottom (every 15 minutes)
-const TIMES = ['9:04 PM', '9:19 PM', '9:34 PM', '9:49 PM', '10:04 PM', '10:19 PM', '10:34 PM', '10:49 PM', '11:04 PM'];
-
-// Colored stripes behind the graph, highest level (top) to lowest.
-// The color of each one is in WaveGraph.css (.wave-graph__band--l7 ...)
 const BANDS = ['l7', 'l6', 'l5', 'l4', 'l3', 'l2', 'l1'];
 
-// Index 6 (10:34 PM) is highlighted yellow, the last one green.
-const timeClass = (i) =>
-  i === 6 ? 'wave-graph__time--now' : i === TIMES.length - 1 ? 'wave-graph__time--end' : '';
+// 🕒 Dynamically generate 9 timestamps spaced 15 mins apart with Index 6 as NOW
+const getRealtimeTimestamps = () => {
+  const now = new Date();
+  return Array.from({ length: 9 }, (_, i) => {
+    const offsetMinutes = (i - 6) * 15; // -90m, -75m, -60m, -45m, -30m, -15m, NOW (+0m), +15m, +30m
+    const pointTime = new Date(now.getTime() + offsetMinutes * 60000);
+    return pointTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  });
+};
 
-// Props:
-//   scenario  → the current SCENARIOS entry (path, water level, etc.)
-//   statusKey → 'safe' | 'monitor' | 'warning' | 'danger' | 'evacuate' (colors are in tokens.css)
-//   timestamp → the "LIVE UPDATE AS OF..." text
+const timeClass = (i, totalLength) =>
+  i === 6 ? 'wave-graph__time--now' : i === totalLength - 1 ? 'wave-graph__time--end' : '';
+
 export default function WaveGraph({ scenario, statusKey, timestamp }) {
-  // Which threshold are we currently at? (used by the tooltip)
-  const current = THRESHOLDS[scenario.level - 1];
+  if (!scenario) {
+    return (
+      <div className="wave-graph wave-graph--loading">
+        <p>Receiving telemetry stream...</p>
+      </div>
+    );
+  }
 
-  // Level 7 should be at the TOP, so we reverse a copy of the list.
+  const times = getRealtimeTimestamps();
+  const current = THRESHOLDS[scenario.level - 1] || THRESHOLDS[0];
   const gridLines = [...THRESHOLDS].reverse();
-
-  // The filled area under the line
   const areaPath = `M 0 300 ${scenario.path.replace('M', 'L')} L 800 300 Z`;
 
   return (
     <div className="wave-graph" data-status={statusKey}>
 
-      {/* ---------- Header: title + live timestamp ---------- */}
       <div className="wave-graph__header">
         <div className="wave-graph__heading">
           <span className="wave-graph__heading-dot"></span>
@@ -41,40 +45,15 @@ export default function WaveGraph({ scenario, statusKey, timestamp }) {
         </div>
       </div>
 
-      {/* ---------- Dark graph box ---------- */}
       <div className="wave-graph__box">
-
-        {/* Layer 1: faint photo (image is set in WaveGraph.css) */}
         <div className="wave-graph__layer wave-graph__photo" />
 
-        {/* Layer 2: colored level stripes */}
         <div className="wave-graph__layer wave-graph__bands">
           {BANDS.map((band) => (
             <div key={band} className={`wave-graph__band--${band}`}></div>
           ))}
         </div>
 
-        {/* Layer 3: person + car silhouettes so people can judge the depth */}
-        <div className="wave-graph__layer wave-graph__figures">
-          <div className="wave-graph__figure wave-graph__figure--person">
-            <svg className="wave-graph__figure-svg" viewBox="0 0 100 220">
-              <circle cx="50" cy="25" r="18" />
-              <path d="M 30 50 C 30 45, 70 45, 70 50 L 75 120 L 62 120 L 62 215 L 52 215 L 52 140 L 48 140 L 48 215 L 38 215 L 38 120 L 25 120 Z" />
-            </svg>
-            <span className="wave-graph__caption">Human Scale</span>
-          </div>
-          <div className="wave-graph__figure wave-graph__figure--car">
-            <svg className="wave-graph__figure-svg" viewBox="0 0 240 100">
-              <path d="M 10 60 L 30 60 L 50 30 L 160 30 L 190 60 L 230 60 C 235 60, 240 65, 240 70 L 240 85 L 220 85 C 220 75, 195 75, 195 85 L 75 85 C 75 75, 50 75, 50 85 L 10 85 Z" />
-              <circle cx="62" cy="85" r="12" fill="#000" />
-              <circle cx="207" cy="85" r="12" fill="#000" />
-            </svg>
-            <span className="wave-graph__caption">Vehicle Scale</span>
-          </div>
-        </div>
-
-        {/* Layer 4: the 7 dashed threshold lines (Level 7 at top).
-            data-status gives each line its own color; data-active brightens the current level. */}
         <div className="wave-graph__layer wave-graph__rows">
           {gridLines.map((t) => (
             <div
@@ -86,12 +65,13 @@ export default function WaveGraph({ scenario, statusKey, timestamp }) {
               <span className="wave-graph__tag">
                 L{t.level}: {t.name} ({t.cm.toFixed(1)}cm)
               </span>
-              <span className="wave-graph__tag wave-graph__tag--status">{STATUS[t.status].label}</span>
+              <span className="wave-graph__tag wave-graph__tag--status">
+                {STATUS[t.status]?.label || 'Normal'}
+              </span>
             </div>
           ))}
         </div>
 
-        {/* Layer 5: the water curve + tooltip */}
         <div className="wave-graph__water">
           <svg className="wave-graph__svg" viewBox="0 0 800 300" preserveAspectRatio="none">
             <defs>
@@ -101,22 +81,48 @@ export default function WaveGraph({ scenario, statusKey, timestamp }) {
               </linearGradient>
             </defs>
 
-            {/* Filled water area */}
-            <path d={areaPath} fill="url(#waterGrad)" />
+            {/* SCALE-ACCURATE SILHOUETTES */}
+            <g className="wave-graph__illustrations" opacity="0.4">
+              
+              {/* 4'11" Human - Ground is at Y=290, Chest hits perfectly at L7 (Y=73) */}
+              <g id="human-scale" transform="translate(40, 0)">
+                <circle cx="25" cy="30" r="14" fill="#ffffff" />
+                {/* Torso */}
+                <path d="M 12 50 L 38 50 L 34 135 L 16 135 Z" fill="#ffffff" />
+                {/* Arms */}
+                <rect x="2" y="50" width="8" height="85" rx="4" fill="#ffffff" />
+                <rect x="40" y="50" width="8" height="85" rx="4" fill="#ffffff" />
+                {/* Legs down to Y=290 */}
+                <rect x="15" y="130" width="10" height="160" rx="4" fill="#ffffff" />
+                <rect x="25" y="130" width="10" height="160" rx="4" fill="#ffffff" />
+              </g>
 
-            {/* The glowing line itself */}
+              {/* Realistic Sedan (Toyota Vios Profile) */}
+              <g id="car-scale" transform="translate(140, 0)">
+                {/* Car Body - Roof peaks below L7, chassis aligns with human hips */}
+                <path d="M 50 160 Q 90 150 120 100 Q 180 85 220 85 Q 260 95 300 135 L 350 140 Q 370 145 370 170 L 370 230 Q 365 240 340 240 L 40 240 Q 10 240 10 200 L 20 170 Z" fill="#ffffff" />
+                
+                {/* Windows */}
+                <path d="M 130 105 Q 170 95 210 95 L 210 140 L 95 140 Q 110 120 130 105 Z" fill="#0d1b2a" opacity="0.8" />
+                <path d="M 220 95 Q 250 100 280 135 L 220 135 Z" fill="#0d1b2a" opacity="0.8" />
+                
+                {/* Tires - Radius 35 hits exactly at L5 (66.1cm) */}
+                <circle cx="90" cy="240" r="35" fill="#0d1b2a" stroke="#ffffff" strokeWidth="4" />
+                <circle cx="290" cy="240" r="35" fill="#0d1b2a" stroke="#ffffff" strokeWidth="4" />
+              </g>
+            </g>
+
+            {/* WATER ANIMATION & LINE */}
+            <path d={areaPath} fill="url(#waterGrad)" />
             <path d={scenario.path} className="wave-graph__line" />
 
-            {/* Vertical guide + pulsing dot at x = 600 */}
             <g transform={`translate(600, ${scenario.pointY})`}>
               <line x1="0" y1="-160" x2="0" y2="140" className="wave-graph__guide" />
               <circle r="7" className="wave-graph__dot" />
             </g>
           </svg>
 
-          {/* Tooltip. Only 'top' stays inline because it comes from the data. */}
           <div className="wave-graph__tooltip" style={{ top: scenario.tooltipTop }}>
-            <div className="wave-graph__tip-time">10:34 PM</div>
             <div className="wave-graph__tip-row">
               <span className="wave-graph__tip-value">{scenario.waterLevelCm.toFixed(2)}</span>
               <span className="wave-graph__tip-unit">cm</span>
@@ -127,10 +133,10 @@ export default function WaveGraph({ scenario, statusKey, timestamp }) {
           </div>
         </div>
 
-        {/* Time labels */}
+        {/* DYNAMIC REAL-TIME TIMESTAMPS */}
         <div className="wave-graph__times">
-          {TIMES.map((time, i) => (
-            <span key={time} className={timeClass(i)}>{time}</span>
+          {times.map((time, i) => (
+            <span key={i} className={timeClass(i, times.length)}>{time}</span>
           ))}
         </div>
       </div>

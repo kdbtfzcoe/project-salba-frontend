@@ -17,3 +17,23 @@
 .site-footer__name { font-size: 1.125rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
 .site-footer__tagline { font-size: 0.75rem; color: var(--gray-400); }
 .site-footer__copy { margin-top: 0.5rem; font-family: var(--font-mono); font-size: 10px; color: var(--gray-500); }
+
+/* 1. Reset root elements to fill full height */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 2. Turn your main app wrapper into a full-height flex column */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;  /* Fallback for older browsers */
+  min-height: 100dvh; /* Dynamic Viewport Height for mobile browsers */
+}
+
+/* 3. Force the main page content to expand and push the footer down */
+main {
+  flex: 1;
+}

@@ -1,147 +1,172 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MetricCard from '../components/shared/MetricCard.jsx';
 import WaveGraph from '../components/shared/WaveGraph.jsx';
-import { SCENARIOS, STATUS, THRESHOLDS, formatLiveTimestamp } from '../services/apiService';
+import { 
+    getLiveTelemetry, 
+    calculateGraphGeometry, 
+    STATUS, 
+    THRESHOLDS, 
+    formatLiveTimestamp 
+} from '../services/apiService';
 import '../css/pages/MonitoringPage.css';
 
-// Icon of the "Rate of Change" card for each rate type.
-// (The colors are in tokens.css, found through data-rate.)
 const RATE_ICON = {
-  INCREASING: 'fa-arrow-trend-up',
-  DECREASING: 'fa-arrow-trend-down',
-  STABLE: 'fa-minus',
+    INCREASING: 'fa-arrow-trend-up',
+    DECREASING: 'fa-arrow-trend-down',
+    STABLE: 'fa-minus',
 };
 
+const DEFAULT_TELEMETRY = {
+    waterLevelCm: 0,
+    status: 'SAFE',
+    rateStatus: 'STABLE',
+    rateValue: '0.0 cm/min',
+    nodeDesc: 'Continuous river height measurement active.',
+    forecast: {
+        estimatedMinutes: null,
+        rateStatus: 'STABLE',
+        rateValue: '0.0 cm/min',
+        nextThreshold: null,
+        message: 'Water level stable. No threshold breach expected.'
+    }
+};
+
+// 1. Start loading as false and pre-load telemetry with DEFAULT_TELEMETRY
 export default function MonitoringPage() {
-  // statusKey = which scenario is selected ('safe', 'monitor', 'warning', 'danger', 'evacuate').
-  // Changing it re-renders the whole page with new data. Starts on 'danger'.
-  const [statusKey, setStatusKey] = useState('danger');
+    const [telemetry, setTelemetry] = useState(DEFAULT_TELEMETRY);
+    const [timestamp, setTimestamp] = useState(formatLiveTimestamp());
 
-  // The "LIVE UPDATE AS OF" text. Refreshes every 30 seconds.
-  const [timestamp, setTimestamp] = useState(formatLiveTimestamp);
-  useEffect(() => {
-    const id = setInterval(() => setTimestamp(formatLiveTimestamp()), 30000);
-    return () => clearInterval(id); // stop the timer when leaving the page
-  }, []);
+    useEffect(() => {
+        const fetchLiveData = async () => {
+            try {
+                const data = await getLiveTelemetry();
+                if (data) setTelemetry(data);
+                setTimestamp(formatLiveTimestamp());
+            } catch (error) {
+                console.error('API Error connecting to backend:', error);
+            }
+        };
 
-  // Everything below is worked out from the selected statusKey
-  const scenario = SCENARIOS[statusKey];                 // numbers + curve
-  const status = STATUS[statusKey];                      // label + icon
-  const current = THRESHOLDS[scenario.level - 1];        // the level we're at
-  const next = THRESHOLDS[scenario.level];               // the next level up (may be undefined)
+        fetchLiveData(); // Fetches in background without blocking UI
+        const interval = setInterval(fetchLiveData, 3000);
 
-  return (
-    <section className="monitor">
-      <div className="monitor__inner">
+        return () => clearInterval(interval);
+    }, []);
 
-        {/* ---------- Page title + simulate buttons ---------- */}
-        <div className="monitor__header">
-          <div>
-            <div className="eyebrow">
-              <i className="fa-solid fa-satellite-dish anim-pulse"></i> Real-time Telemetry
-            </div>
-            <h2 className="monitor__title">LIVE FLOOD MONITORING</h2>
-            <p className="monitor__subtitle">
-              System Node Location: <strong>Brgy. Dela Paz, Biñan City</strong>
-            </p>
-          </div>
 
-          {/* One button per scenario. data-status gives each button its text color. */}
-          <div className="scenario-bar">
-            <span className="scenario-bar__label">Simulate Status:</span>
-            {Object.keys(SCENARIOS).map((k) => (
-              <button
-                key={k}
-                data-status={k}
-                onClick={() => setStatusKey(k)}
-                className={`scenario-btn ${statusKey === k ? 'active' : ''}`}
-              >
-                <i className={`fa-solid ${STATUS[k].icon}`}></i> {STATUS[k].label}
-              </button>
-            ))}
-          </div>
-        </div>
+    const currentTelemetry = telemetry || DEFAULT_TELEMETRY;
+    const currentCm = currentTelemetry.waterLevelCm || 0;
+    const scenario = calculateGraphGeometry(currentCm);
+    
+    // Normalize status key for CSS badges
+    let rawStatus = (currentTelemetry.status || 'SAFE').toLowerCase();
+    if (rawStatus === 'normal') rawStatus = 'safe';
+    if (rawStatus === 'monitoring') rawStatus = 'monitor';
 
-        {/* ---------- Graph (left) + cards (right) ---------- */}
-        <div className="monitor__grid">
+    const statusKey = rawStatus;
+    const status = STATUS[statusKey] || STATUS.safe || { label: 'Safe', color: 'safe', icon: 'fa-circle-check' };
+    const currentLevel = THRESHOLDS[scenario.level - 1] || THRESHOLDS[0];
 
-          <WaveGraph scenario={scenario} statusKey={statusKey} timestamp={timestamp} />
+    // Forecast details from backend EMA engine
+    const forecast = currentTelemetry.forecast || DEFAULT_TELEMETRY.forecast;
 
-          <div className="monitor__side">
+    return (
+        <section className="monitor">
+            <div className="monitor__inner">
 
-            {/* Card 1: current water level */}
-            <MetricCard
-              label="CURRENT WATER LEVEL"
-              data-status={statusKey}
-              icon={
-                <div className="monitor__icon-box">
-                  <i className="fa-solid fa-ruler-vertical"></i>
+                <div className="monitor__header">
+                    <div>
+                        <div className="eyebrow">
+                            <i className="fa-solid fa-satellite-dish anim-pulse"></i> Real-Time Telemetry
+                        </div>
+                        <h2 className="monitor__title">LIVE FLOOD MONITORING</h2>
+                    </div>
+
+                    <div className="monitor__badge">
+                        <span className="anim-ping"></span>
+                        ESP32 Node Online
+                    </div>
                 </div>
-              }
-            >
-              <div className="monitor__value">
-                <span className="monitor__number">{scenario.waterLevelCm.toFixed(2)}</span>
-                <span className="monitor__unit">cm</span>
-              </div>
-              <div className="level-pill">
-                <i className="fa-solid fa-layer-group"></i>
-                <span>Level {current.level}: {current.name} LEVEL ({current.cm.toFixed(2)} cm)</span>
-              </div>
-            </MetricCard>
 
-            {/* Card 2: rate of change */}
-            <MetricCard
-              label="RATE OF CHANGE"
-              data-rate={scenario.rateStatus}
-              icon={
-                <span className="rate-icon">
-                  <i className={`fa-solid ${RATE_ICON[scenario.rateStatus]}`}></i>
-                </span>
-              }
-            >
-              <div className="monitor__rate">{scenario.rateStatus}</div>
-              <p className="monitor__note">
-                Speed: <strong>{scenario.rateValue}</strong>
-              </p>
-            </MetricCard>
+                <div className="monitor__grid">
+                    <WaveGraph scenario={scenario} statusKey={statusKey} timestamp={timestamp} />
 
-            {/* Card 3: node status (gradient changes per status) */}
-            <MetricCard label="PROJECT SALBA NODE STATUS" variant="status" data-status={statusKey}>
-              <div className="monitor__status-name">{status.label}</div>
-              <p className="monitor__status-desc">
-                <i className="fa-solid fa-circle-info"></i>
-                <span>{scenario.nodeDesc}</span>
-              </p>
-            </MetricCard>
+                    <div className="monitor__side">
 
-            {/* Card 4: forecast (estimated time until the next level) */}
-            <MetricCard
-              label="FORECAST ENGINE"
-              variant="dark"
-              icon={<span className="monitor__model-tag">CM/MIN MODEL</span>}
-            >
-              <div className="monitor__forecast">
-                <span className="monitor__forecast-time">{scenario.forecastTime}</span>
-                <span className="monitor__forecast-hint">estimated time</span>
-              </div>
-              <p className="monitor__forecast-note">
-                {/* If the water is rising and there IS a next level, name it. Otherwise say it's stable. */}
-                {next && scenario.rateStatus !== 'STABLE' ? (
-                  <>
-                    Before reaching{' '}
-                    <strong>
-                      Level {next.level}: {next.name} ({next.cm.toFixed(2)} cm)
-                    </strong>{' '}
-                    at {scenario.rateValue}.
-                  </>
-                ) : (
-                  'Water level stable. No threshold breach expected in the next 60 mins.'
-                )}
-              </p>
-            </MetricCard>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+                        {/* Card 1: Live Water Level */}
+                        <MetricCard
+                            label="CURRENT WATER LEVEL"
+                            data-status={statusKey}
+                            icon={
+                                <div className="monitor__icon-box">
+                                    <i className="fa-solid fa-ruler-vertical"></i>
+                                </div>
+                            }
+                        >
+                            <div className="monitor__value">
+                                <span className="monitor__number">{currentCm.toFixed(2)}</span>
+                                <span className="monitor__unit">cm</span>
+                            </div>
+                            <div className="level-pill">
+                                <i className="fa-solid fa-layer-group"></i>
+                                <span>Level {currentLevel.level}: {currentLevel.name} ({currentLevel.cm.toFixed(2)} cm)</span>
+                            </div>
+                        </MetricCard>
+
+                        {/* Card 2: Rate of Change */}
+                        <MetricCard
+                            label="RATE OF CHANGE"
+                            data-rate={currentTelemetry.rateStatus || 'STABLE'}
+                            icon={
+                                <span className="rate-icon">
+                                    <i className={`fa-solid ${RATE_ICON[currentTelemetry.rateStatus] || RATE_ICON.STABLE}`}></i>
+                                </span>
+                            }
+                        >
+                            <div className="monitor__rate">{currentTelemetry.rateStatus || 'STABLE'}</div>
+                            <p className="monitor__note">
+                                Speed: <strong>{currentTelemetry.rateValue || '0.0 cm/min'}</strong>
+                            </p>
+                        </MetricCard>
+
+                        {/* Card 3: Node Status */}
+                        <MetricCard label="PROJECT SALBA NODE STATUS" variant="status" data-status={statusKey}>
+                            <div className="monitor__status-name">{status.label}</div>
+                            <p className="monitor__status-desc">
+                                <i className="fa-solid fa-circle-info"></i>
+                                <span>{currentTelemetry.nodeDesc || 'Continuous river height measurement active.'}</span>
+                            </p>
+                        </MetricCard>
+
+                        {/* Card 4: Forecast Engine (EMA Model) */}
+                        <MetricCard
+                            label="FORECAST ENGINE"
+                            variant="dark"
+                            icon={<span className="monitor__model-tag">EMA CM/MIN MODEL</span>}
+                        >
+                            <div className="monitor__forecast">
+                                <span className="monitor__forecast-time">
+                                    {forecast?.estimatedMinutes ? `${forecast.estimatedMinutes} mins` : 'N/A'}
+                                </span>
+                                <span className="monitor__forecast-hint">estimated time</span>
+                            </div>
+                            <p className="monitor__forecast-note">
+                                {forecast?.nextThreshold && currentTelemetry.rateStatus === 'INCREASING' ? (
+                                    <>
+                                        Before reaching{' '}
+                                        <strong>
+                                            Level {forecast.nextThreshold.level}: {forecast.nextThreshold.name} ({forecast.nextThreshold.cm.toFixed(2)} cm)
+                                        </strong>
+                                    </>
+                                ) : (
+                                    forecast?.message || 'Water level stable. No threshold breach expected.'
+                                )}
+                            </p>
+                        </MetricCard>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
 }
