@@ -1,0 +1,30 @@
+.metric-card {
+  padding: 1.25rem;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-card);
+}
+.metric-card__row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
+.metric-card__label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray-400);
+}
+
+/* variant="status": gradient that follows the data-status color set in tokens.css */
+.metric-card--status {
+  background: linear-gradient(to bottom right, var(--status-card-from), var(--status-card-to));
+  color: #fff;
+  border: 0;
+  box-shadow: var(--shadow-lg);
+}
+.metric-card--status .metric-card__label { color: rgba(255, 255, 255, 0.8); }
+
+/* variant="dark": the Forecast card */
+.metric-card--dark { background: var(--navy); color: #fff; border: 1px solid var(--teal-dark); }
+.metric-card--dark .metric-card__label { color: var(--teal-light); }

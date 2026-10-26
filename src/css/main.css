@@ -1,0 +1,131 @@
+/* The design tokens must be the very first line */
+@import './tokens.css';
+
+/* ---------- Reset (replaces what Tailwind did automatically) ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; line-height: 1.5; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--light);
+  color: var(--gray-800);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; }
+img { max-width: 100%; height: auto; }
+button, input { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; }
+table { border-collapse: collapse; }
+strong { font-weight: 700; }
+
+/* Text highlight color */
+::selection { background: var(--teal); color: #fff; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--light); }
+::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 4px; }
+
+/* ---------- Animations (replace Tailwind's animate-ping / pulse / bounce) ---------- */
+@keyframes anim-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+@keyframes anim-pulse { 50% { opacity: 0.5; } }
+@keyframes anim-bounce {
+  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+  50% { transform: none; animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+}
+.anim-ping { animation: anim-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+.anim-pulse { animation: anim-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.anim-bounce { animation: anim-bounce 1s infinite; }
+
+/* =====================================================
+   SHARED BUILDING BLOCKS (used on more than one page)
+   ===================================================== */
+
+/* Small teal label above page titles */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  background: var(--teal-tint);
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.eyebrow--pill {
+  margin-bottom: 0;
+  border-radius: 9999px;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+}
+
+/* Square teal box that holds an icon or a number */
+.icon-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+  background: var(--teal-tint);
+  color: var(--teal);
+  font-size: 1.125rem;
+}
+
+/* Card with icon + title + text (Landing, Guide, Register) */
+.info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-sm);
+}
+.info-card--light { background: var(--light); }
+.info-card--compact { padding: 1rem; }
+.info-card__title { font-size: 0.875rem; font-weight: 700; color: var(--navy); }
+.info-card__text { margin-top: 0.25rem; font-size: 0.75rem; color: var(--gray-500); }
+
+/* Buttons: combine .btn with ONE color variant, e.g. class="btn btn--teal" */
+.btn {
+  display: inline-block;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-2xl);
+  font-size: 0.875rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.btn i { margin-right: 0.5rem; }
+.btn--block { width: 100%; }
+.btn--accent { background: var(--accent); color: var(--navy); font-weight: 800; box-shadow: var(--shadow-xl); }
+.btn--accent:hover { background: var(--accent-hover); transform: translateY(-0.25rem); }
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 700;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+}
+.btn--ghost:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-0.25rem); }
+.btn--teal { background: var(--teal); color: #fff; font-weight: 800; box-shadow: var(--shadow-lg); }
+.btn--teal:hover { background: var(--teal-dark); transform: translateY(-2px); }
+.btn--outline {
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(0, 102, 102, 0.3);
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.btn--outline:hover { background: rgba(0, 102, 102, 0.05); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn:disabled:hover { transform: none; }

@@ -1,0 +1,200 @@
+/* ---------- Card + header ---------- */
+.wave-graph {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-card);
+}
+@media (min-width: 1024px) { .wave-graph { grid-column: span 8 / span 8; } }
+
+.wave-graph__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+@media (min-width: 640px) { .wave-graph__header { flex-direction: row; align-items: center; } }
+.wave-graph__heading { display: flex; align-items: center; gap: 0.5rem; }
+.wave-graph__heading-dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; background: var(--teal); }
+.wave-graph__title { font-size: 1.125rem; font-weight: 800; color: var(--navy); text-transform: uppercase; }
+.wave-graph__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.wave-graph__live-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #10b981; }
+
+/* ---------- Dark graph box ---------- */
+.wave-graph__box {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 400px;
+  overflow: hidden;
+  background: var(--navy-dark);
+  border: 1px solid rgba(0, 77, 77, 0.5);
+  border-radius: var(--radius-2xl);
+}
+@media (min-width: 640px) { .wave-graph__box { min-height: 440px; } }
+
+/* Layers 1-4 are stacked on top of each other */
+.wave-graph__layer { position: absolute; inset: 0; }
+
+/* Layer 1: faint photo */
+.wave-graph__photo {
+  background-image: url('https://images.unsplash.com/photo-1547683905-f686c993aae5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  mix-blend-mode: overlay;
+}
+
+/* Layer 2: colored stripes, top (highest level) to bottom */
+.wave-graph__bands { display: flex; flex-direction: column; pointer-events: none; opacity: 0.2; }
+.wave-graph__band--l7 { height: 15%; background: rgba(147, 51, 234, 0.4); }
+.wave-graph__band--l6 { height: 20%; background: rgba(168, 85, 247, 0.3); }
+.wave-graph__band--l5 { height: 20%; background: rgba(239, 68, 68, 0.3); }
+.wave-graph__band--l4 { height: 15%; background: rgba(249, 115, 22, 0.25); }
+.wave-graph__band--l3 { height: 10%; background: rgba(245, 158, 11, 0.2); }
+.wave-graph__band--l2 { height: 10%; background: rgba(59, 130, 246, 0.15); }
+.wave-graph__band--l1 { height: 10%; background: rgba(16, 185, 129, 0.15); }
+
+/* Layer 3: person + car silhouettes */
+.wave-graph__figures {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 1rem 2.5rem;
+  pointer-events: none;
+  opacity: 0.25;
+}
+.wave-graph__figure { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.wave-graph__figure--person { height: 90%; }
+.wave-graph__figure--car { height: 50%; }
+.wave-graph__figure-svg { height: 100%; width: auto; fill: #fff; }
+.wave-graph__caption {
+  margin-top: 0.25rem;
+  padding: 0 0.25rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.5);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+
+/* Layer 4: the 7 dashed threshold lines. Colors come from data-status. */
+.wave-graph__rows {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem 0.75rem;
+  pointer-events: none;
+}
+.wave-graph__row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 2px dashed var(--status-line);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+.wave-graph__row[data-active='true'] { opacity: 1; }
+.wave-graph__tag {
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  background: var(--status-tag-bg);
+  color: var(--status-tag-text);
+  font-weight: 800;
+}
+.wave-graph__tag--status { padding: 0 0.25rem; font-weight: 700; text-transform: uppercase; }
+
+/* Layer 5: water curve + tooltip */
+.wave-graph__water { position: relative; flex: 1; }
+.wave-graph__svg { width: 100%; height: 100%; overflow: visible; }
+.wave-graph__stop-top { stop-color: var(--status-color); stop-opacity: 0.65; }
+.wave-graph__stop-bottom { stop-color: var(--status-dark); stop-opacity: 0.9; }
+.wave-graph__line {
+  fill: none;
+  stroke: var(--status-color);
+  stroke-width: 4;
+  filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.8));  /* glow */
+}
+.wave-graph__guide { stroke: rgba(255, 255, 255, 0.4); stroke-dasharray: 3 3; }
+.wave-graph__dot {
+  fill: var(--status-color);
+  stroke: #fff;
+  stroke-width: 3;
+  animation: pulse-glow 2s infinite;
+}
+@keyframes pulse-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.7); }
+  70%  { box-shadow: 0 0 0 10px rgba(45, 212, 191, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0); }
+}
+
+.wave-graph__tooltip {
+  position: absolute;
+  left: 75%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--navy);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  transform: translate(-50%, -100%);
+  transition: all 0.3s;
+}
+.wave-graph__tip-time {
+  margin-bottom: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--teal);
+}
+.wave-graph__tip-row { display: flex; align-items: baseline; gap: 0.25rem; }
+.wave-graph__tip-value { font-size: 1.125rem; font-weight: 900; }
+.wave-graph__tip-unit { font-size: 10px; font-weight: 700; color: var(--gray-500); }
+.wave-graph__tip-level {
+  margin-top: 0.125rem;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--warning);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Time labels ---------- */
+.wave-graph__times {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.625rem 1rem;
+  background: rgba(6, 15, 30, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+.wave-graph__time--now { color: var(--accent); font-weight: 700; }
+.wave-graph__time--end { color: #34d399; font-weight: 700; }

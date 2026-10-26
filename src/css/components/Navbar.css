@@ -1,0 +1,107 @@
+.navbar {
+  position: fixed;
+  width: 100%;
+  z-index: 50;
+  padding: 0.875rem 1.5rem;
+  background: rgba(0, 102, 102, 0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.navbar__inner {
+  max-width: 80rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo */
+.navbar__logo { display: flex; align-items: center; gap: 0.75rem; }
+.navbar__logo-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 1.125rem;
+  transition: all 0.2s;
+}
+.navbar__logo:hover .navbar__logo-icon { background: var(--accent); color: var(--navy); }
+.navbar__brand { display: flex; flex-direction: column; }
+.navbar__title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #fff;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.navbar__subtitle {
+  margin-top: 0.125rem;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+/* Desktop menu (hidden on phones) */
+.navbar__menu { display: none; align-items: center; gap: 0.5rem; }
+.navbar__cta {
+  margin-left: 1rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: var(--navy);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.2s;
+}
+.navbar__cta:hover { background: var(--accent-hover); transform: scale(1.05); }
+
+/* Hamburger button + mobile dropdown (hidden on desktop) */
+.navbar__toggle { color: #fff; font-size: 1.5rem; }
+.navbar__mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 1rem 0 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.navbar__cta-mobile {
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--navy);
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Menu links. React Router adds "active" to the current page's link. */
+.nav-link {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s;
+}
+.nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+.nav-link.active { color: #fff; background: rgba(255, 255, 255, 0.15); }
+
+/* Desktop (768px and wider) */
+@media (min-width: 768px) {
+  .navbar { padding-left: 3rem; padding-right: 3rem; }
+  .navbar__menu { display: flex; }
+  .navbar__toggle, .navbar__mobile { display: none; }
+}

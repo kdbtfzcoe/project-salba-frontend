@@ -1,0 +1,74 @@
+/* ---------- Section layout ---------- */
+.guide-intro { padding: 8rem 1.5rem 4rem; }
+.guide-ref {
+  padding: 4rem 1.5rem;
+  background: var(--white);
+  border-top: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+}
+@media (min-width: 768px) {
+  .guide-intro, .guide-ref { padding-left: 3rem; padding-right: 3rem; }
+}
+.guide__inner { max-width: 64rem; margin: 0 auto; }
+.guide__inner--wide { max-width: 72rem; }
+.guide__head { margin-bottom: 2.5rem; text-align: center; }
+.guide__title { margin-top: 0.75rem; font-size: 2.25rem; font-weight: 800; color: var(--navy); text-transform: uppercase; }
+.guide__title--sm { font-size: 1.875rem; }
+
+/* ---------- "How Project SALBA Works" steps ---------- */
+.guide__steps { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+@media (min-width: 640px) { .guide__steps { grid-template-columns: repeat(2, 1fr); } }
+
+/* The numbered square (1, 2, 3, 4) */
+.guide-step-number {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+  background: var(--teal-tint);
+  color: var(--teal);
+  font-weight: 800;
+}
+
+/* ---------- Threshold table ---------- */
+.guide-table-wrap {
+  overflow-x: auto;   /* lets the table scroll sideways on phones */
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-card);
+}
+.guide-table { width: 100%; text-align: left; }
+.guide-table th { padding: 1rem 1.5rem; }
+.guide-table td { padding: 0.875rem 1.5rem; }
+.guide-table__head {
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.guide-table tbody { font-size: 0.875rem; font-weight: 500; }
+.guide-table tbody tr + tr { border-top: 1px solid var(--gray-100); }
+.guide-table tbody tr:hover { background: var(--gray-50); }
+.guide-table__level { font-weight: 700; color: var(--navy); }
+.guide-table__ft { font-family: var(--font-mono); color: var(--gray-600); }
+.guide-table__cm { font-family: var(--font-mono); font-weight: 700; color: var(--teal); }
+.guide-table__action { font-size: 0.75rem; color: var(--gray-500); }
+
+/* Colored badge in the table. Colors come from data-status (tokens.css). */
+.status-pill {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--status-pill-bg);
+  color: var(--status-pill-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.guide__cta { margin-top: 3rem; text-align: center; }

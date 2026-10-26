@@ -1,0 +1,119 @@
+/* =====================================================
+   DESIGN TOKENS. Change a value here, the whole site updates.
+   ===================================================== */
+:root {
+  /* Brand colors */
+  --teal: #006666;
+  --teal-dark: #004d4d;
+  --teal-light: #008080;
+  --teal-tint: rgba(0, 102, 102, 0.1);
+  --navy: #0a192f;
+  --navy-dark: #060f1e;
+  --accent: #EAB308;
+  --accent-hover: #CA8A04;
+  --warning: #F97316;
+  --danger: #EF4444;
+  --safe: #10B981;
+  --light: #F8FAFC;
+  --white: #ffffff;
+
+  /* Grays */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+
+  /* Fonts (the Google Fonts link stays in index.html) */
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'Space Grotesk', monospace;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 0 1px rgba(0, 0, 0, 0.1);
+  --shadow-glass: 0 20px 40px -15px rgba(0, 102, 102, 0.25);
+
+  /* Corner roundness */
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+}
+
+/* =====================================================
+   ALERT STATUS COLORS
+   JSX puts data-status="danger" on an element, and every
+   color below becomes available to that element's CSS.
+   To add a new status: add one block here + one entry in
+   STATUS (apiService.js).
+   ===================================================== */
+[data-status='safe'] {
+  --status-color: #10B981;       /* water line, dot */
+  --status-dark: #047857;        /* bottom of water fill */
+  --status-pill-bg: #d1fae5;     /* badges */
+  --status-pill-text: #065f46;
+  --status-card-from: #10b981;   /* Node Status card gradient */
+  --status-card-to: #0f766e;
+  --status-tag-bg: rgba(2, 44, 34, 0.9);   /* label on graph line */
+  --status-tag-text: #6ee7b7;
+  --status-line: rgba(52, 211, 153, 0.6);  /* dashed graph line */
+  --status-btn-text: #047857;    /* Simulate button text */
+}
+[data-status='monitor'] {
+  --status-color: #3B82F6;
+  --status-dark: #1E3A8A;
+  --status-pill-bg: #dbeafe;
+  --status-pill-text: #1e40af;
+  --status-card-from: #2563eb;
+  --status-card-to: #155e75;
+  --status-tag-bg: rgba(23, 37, 84, 0.9);
+  --status-tag-text: #93c5fd;
+  --status-line: rgba(96, 165, 250, 0.6);
+  --status-btn-text: #1d4ed8;
+}
+[data-status='warning'] {
+  --status-color: #F59E0B;
+  --status-dark: #B45309;
+  --status-pill-bg: #fef3c7;
+  --status-pill-text: #92400e;
+  --status-card-from: #f59e0b;
+  --status-card-to: #ea580c;
+  --status-tag-bg: rgba(69, 26, 3, 0.9);
+  --status-tag-text: #fcd34d;
+  --status-line: rgba(251, 191, 36, 0.7);
+  --status-btn-text: #d97706;
+}
+[data-status='danger'] {
+  --status-color: #EF4444;
+  --status-dark: #991B1B;
+  --status-pill-bg: #fee2e2;
+  --status-pill-text: #991b1b;
+  --status-card-from: #dc2626;
+  --status-card-to: #991b1b;
+  --status-tag-bg: rgba(69, 10, 10, 0.9);
+  --status-tag-text: #fca5a5;
+  --status-line: rgba(239, 68, 68, 0.7);
+  --status-btn-text: #ea580c;
+}
+[data-status='evacuate'] {
+  --status-color: #A855F7;
+  --status-dark: #581C87;
+  --status-pill-bg: #f3e8ff;
+  --status-pill-text: #581c87;
+  --status-card-from: #7e22ce;
+  --status-card-to: #312e81;
+  --status-tag-bg: rgba(88, 28, 135, 0.8);
+  --status-tag-text: #e9d5ff;
+  --status-line: rgba(192, 132, 252, 0.6);
+  --status-btn-text: #7e22ce;
+}
+
+/* Rate-of-change colors (used by the Rate of Change card) */
+[data-rate='INCREASING'] { --rate-color: #F97316; --rate-bg: #ffedd5; }
+[data-rate='DECREASING'] { --rate-color: #10B981; --rate-bg: #d1fae5; }
+[data-rate='STABLE']     { --rate-color: #3b82f6; --rate-bg: #dbeafe; }
