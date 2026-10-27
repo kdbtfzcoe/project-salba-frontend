@@ -1,16 +1,48 @@
-# React + Vite
+# Project SALBA — Frontend Telemetry & Warning Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Project SALBA** is an IoT-driven community flood monitoring and early warning system. This web dashboard provides real-time telemetry visualizations, accurate flood level threshold tracking, predictive wave graphing, and SMS early warning registration for residents.
 
-Currently, two official plugins are available:
+## 🚀 Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* **Live Telemetry & Threshold Tracking:** Real-time water level data rendered using a custom `WaveGraph` visualization mapped against standardized safety thresholds.
+* **Real-time Wave Graphing:** Animated dynamic time-series charts updating automatically on 15-minute telemetry intervals.
+* **SMS Alert Registration:** Resident portal to sign up for automated geo-targeted emergency SMS alerts.
+* **Responsive Layout:** Flexbox-anchored viewports designed to scale seamlessly across mobile devices, tablets, laptops, and wide monitors.
 
-## React Compiler
+## 💻 Development Guide
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Follow these steps to set up and run the frontend application locally:
 
-## Expanding the ESLint configuration
+### 1. Install Dependencies
+Open your terminal in the root project directory and run:
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 2. Configure Environment Variables
+Create a `.env` file in the root directory (do not commit this file to GitHub):
+```env
+VITE_SUPABASE_URL=your_supabase_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+VITE_API_BASE_URL=http://localhost:5000
+```
+
+### 3. Run the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser to view the application.
+
+### 4. Build for Production
+```bash
+npm run build
+```
+
+## ⚠️ Team Collaboration Rules
+
+1. **Keep Secrets Private:** Never paste active Supabase keys or backend API secrets directly inside `.js` or `.jsx` files. Reference them through `import.meta.env.VITE_...`.
+2. **Pull Before Pushing:** Always run `git pull origin main` before pushing local commits to prevent merge conflicts.
+
+## 📄 License & Demonstration Notice
+
+*Project SALBA Node System © 2026. Designed and developed for Barangay Dela Paz, Biñan City.*
