@@ -97,3 +97,190 @@
 }
 .form-message--success { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
 .form-message--error { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+
+/* ---------- Address Input Group ---------- */
+.address-field-group {
+  display: flex;
+  gap: 0.5rem;
+  position: relative; /* Crucial for absolute positioning context */
+  align-items: flex-start;
+}
+
+.form-input--readonly {
+  flex: 1;
+  background: var(--gray-100);
+  cursor: pointer;
+}
+
+.btn--icon-text {
+  padding: 0 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+}
+
+.btn--sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+/* ---------- Map Modal Overlay & Container ---------- */
+.map-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.map-modal-content {
+  background: var(--white);
+  padding: 1.5rem;
+  border-radius: var(--radius-3xl);
+  width: 100%;
+  max-width: 37.5rem;
+  box-shadow: var(--shadow-glass);
+  position: relative;
+}
+
+.map-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
+.map-modal__title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.map-modal__desc {
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+  margin-bottom: 1rem;
+}
+
+/* ---------- Map Search Bar & Suggestions ---------- */
+.map-search-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.map-search-input {
+  width: 100%;
+}
+
+.map-search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 9.375rem;
+  overflow-y: auto;
+  z-index: 1100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.map-search-suggestion-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 0.8125rem;
+  color: var(--gray-700);
+  transition: background 0.15s ease;
+}
+
+.map-search-suggestion-item:hover {
+  background: var(--gray-100);
+}
+
+/* ---------- Map Div Box ---------- */
+.map-container {
+  width: 100%;
+  height: 20rem;
+  border-radius: var(--radius-2xl);
+  margin-bottom: 1rem;
+  border: 1px solid var(--gray-200);
+}
+
+.map-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+/* ---------- Inline Autocomplete Dropdown ---------- */
+.autocomplete-wrapper {
+  position: relative;
+  flex: 1;
+  width: 100%;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 12rem;
+  overflow-y: auto;
+  z-index: 1050;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-suggestion-item {
+  padding: 0.625rem 0.875rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 0.8125rem;
+  color: var(--gray-700);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.15s ease;
+}
+
+.autocomplete-suggestion-item:hover {
+  background: var(--gray-100);
+}
+
+.suggestion-icon {
+  color: var(--teal);
+  font-size: 0.75rem;
+}
+
+.autocomplete-loading {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  border: 1px solid var(--gray-200);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  z-index: 1050;
+}
