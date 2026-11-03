@@ -17,7 +17,7 @@ const RATE_ICON = {
 };
 
 const DEFAULT_TELEMETRY = {
-    waterLevelCm: 0,
+    waterLevelFt: 0,
     status: 'SAFE',
     rateStatus: 'STABLE',
     rateValue: '0.0 cm/min',
@@ -55,7 +55,7 @@ export default function MonitoringPage() {
 
 
     const currentTelemetry = telemetry || DEFAULT_TELEMETRY;
-    const currentCm = currentTelemetry.waterLevelCm || 0;
+    const currentCm = currentTelemetry.waterLevelFt || 0;
     const scenario = calculateGraphGeometry(currentCm);
     
     // Normalize status key for CSS badges
@@ -68,7 +68,12 @@ export default function MonitoringPage() {
     const currentLevel = THRESHOLDS[scenario.level - 1] || THRESHOLDS[0];
 
     // Forecast details from backend EMA engine
-    const forecast = currentTelemetry.forecast || DEFAULT_TELEMETRY.forecast;
+    const forecast = {
+        estimatedMinutes: currentTelemetry.forecastedTimeMinutes,
+        message: currentTelemetry.forecastedTimeMinutes 
+            ? 'Estimated time until next threshold breach.' 
+            : 'Water level stable. No threshold breach expected.'
+    };
 
     return (
         <section className="monitor">
@@ -105,7 +110,7 @@ export default function MonitoringPage() {
                         >
                             <div className="monitor__value">
                                 <span className="monitor__number">{currentCm.toFixed(2)}</span>
-                                <span className="monitor__unit">cm</span>
+                                <span className="monitor__unit">ft</span>
                             </div>
                             <div className="level-pill">
                                 <i className="fa-solid fa-layer-group"></i>

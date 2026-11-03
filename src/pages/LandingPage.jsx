@@ -37,7 +37,7 @@ export default function LandingPage() {
           <h1 className="hero__title">PROJECT SALBA</h1>
           <p className="hero__tagline">Laging Handa, Laging Ligtas.</p>
           <p className="hero__text">
-            Empowering Barangay Dela Paz with IoT-driven flood forecasting and geo-targeted early warnings to ensure community safety.
+            Empowering Barangay Dela Paz with IoT-driven flood monitoring and geo-targeted early warnings to ensure community safety.
           </p>
 
           {/* Two buttons (Link = page change without reloading) */}
