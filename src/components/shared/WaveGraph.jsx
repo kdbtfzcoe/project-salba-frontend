@@ -1,144 +1,365 @@
+
 import React from 'react';
 import { THRESHOLDS, STATUS } from '../../services/apiService';
 import '../../css/components/WaveGraph.css';
 
+import personImage from '../../assets/flood-person.png';
+import carImage from '../../assets/flood-car.png';
+
+const GRAPH_MAX_CM = 130;
+const GRAPH_BOTTOM = 280;
+const GRAPH_TOP = 40;
+const GRAPH_HEIGHT = 300;
+
 const BANDS = ['l7', 'l6', 'l5', 'l4', 'l3', 'l2', 'l1'];
 
-// 🕒 Dynamically generate 9 timestamps spaced 15 mins apart with Index 6 as NOW
-const getRealtimeTimestamps = () => {
+const cmToFeet = (cm) => Number(cm || 0) / 30.48;
+
+const formatTime = (date) =>
+  date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+const getRealtimeTimeline = () => {
   const now = new Date();
-  return Array.from({ length: 9 }, (_, i) => {
-    const offsetMinutes = (i - 6) * 15; // -90m, -75m, -60m, -45m, -30m, -15m, NOW (+0m), +15m, +30m
-    const pointTime = new Date(now.getTime() + offsetMinutes * 60000);
-    return pointTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  // Round current time down to the nearest 5-minute interval.
+  now.setSeconds(0, 0);
+  now.setMinutes(Math.floor(now.getMinutes() / 5) * 5);
+
+  return Array.from({ length: 10 }, (_, i) => {
+    const pointTime = new Date(now);
+
+    if (i < 7) {
+      // First 7 timestamps: Previous readings.
+      pointTime.setMinutes(
+        now.getMinutes() - (7 - i) * 5
+      );
+    } else {
+      // 8th timestamp: Current reading.
+      // 9th and 10th: Future readings.
+      pointTime.setMinutes(
+        now.getMinutes() + (i - 7) * 5
+      );
+    }
+
+    return formatTime(pointTime);
   });
 };
 
-const timeClass = (i, totalLength) =>
-  i === 6 ? 'wave-graph__time--now' : i === totalLength - 1 ? 'wave-graph__time--end' : '';
+// ========================================
+// NONLINEAR WATER LEVEL POSITIONING
+// Expands L1-L2 and L2-L3 spacing.
+// ========================================
 
-export default function WaveGraph({ scenario, statusKey, timestamp }) {
+const LEVEL_1_CM =
+  Number(THRESHOLDS.find((t) => t.level === 1)?.cm ?? 20.42);
+
+const LEVEL_2_CM =
+  Number(THRESHOLDS.find((t) => t.level === 2)?.cm ?? 25.30);
+
+const LEVEL_3_CM =
+  Number(THRESHOLDS.find((t) => t.level === 3)?.cm ?? 32.92);
+
+const GRAPH_DRAW_HEIGHT = GRAPH_BOTTOM - GRAPH_TOP;
+
+const SCALE_FACTOR = 1.6;
+
+// Original visual height below L1.
+const L1_BASE_HEIGHT =
+  (LEVEL_1_CM / GRAPH_MAX_CM) * GRAPH_DRAW_HEIGHT;
+
+// Expanded L1-L2 spacing.
+const L1_L2_HEIGHT =
+  ((LEVEL_2_CM - LEVEL_1_CM) / GRAPH_MAX_CM) *
+  GRAPH_DRAW_HEIGHT * SCALE_FACTOR;
+
+// Expanded L2-L3 spacing.
+const L2_L3_HEIGHT =
+  ((LEVEL_3_CM - LEVEL_2_CM) / GRAPH_MAX_CM) *
+  GRAPH_DRAW_HEIGHT * SCALE_FACTOR;
+
+// Total height occupied by L1-L3.
+const L3_ADJUSTED_HEIGHT =
+  L1_BASE_HEIGHT + L1_L2_HEIGHT + L2_L3_HEIGHT;
+
+// Remaining height for L3-L7.
+const REMAINING_GRAPH_HEIGHT =
+  GRAPH_DRAW_HEIGHT - L3_ADJUSTED_HEIGHT;
+
+// Convert actual water level into adjusted graph position.
+const getLevelY = (waterLevelCm) => {
+  const clampedCm = Math.min(
+    Math.max(Number(waterLevelCm) || 0, 0),
+    GRAPH_MAX_CM
+  );
+
+  let distanceFromBottom;
+
+  if (clampedCm <= LEVEL_1_CM) {
+    distanceFromBottom =
+      (clampedCm / LEVEL_1_CM) * L1_BASE_HEIGHT;
+
+  } else if (clampedCm <= LEVEL_2_CM) {
+    const progress =
+      (clampedCm - LEVEL_1_CM) /
+      (LEVEL_2_CM - LEVEL_1_CM);
+
+    distanceFromBottom =
+      L1_BASE_HEIGHT + progress * L1_L2_HEIGHT;
+
+  } else if (clampedCm <= LEVEL_3_CM) {
+    const progress =
+      (clampedCm - LEVEL_2_CM) /
+      (LEVEL_3_CM - LEVEL_2_CM);
+
+    distanceFromBottom =
+      L1_BASE_HEIGHT +
+      L1_L2_HEIGHT +
+      progress * L2_L3_HEIGHT;
+
+  } else {
+    const progress =
+      (clampedCm - LEVEL_3_CM) /
+      (GRAPH_MAX_CM - LEVEL_3_CM);
+
+    distanceFromBottom =
+      L3_ADJUSTED_HEIGHT +
+      progress * REMAINING_GRAPH_HEIGHT;
+  }
+
+  return Math.round(GRAPH_BOTTOM - distanceFromBottom);
+};
+
+const getPositionPercentage = (y) =>
+  `${(y / GRAPH_HEIGHT) * 100}%`;
+
+export default function WaveGraph({
+  scenario,
+  statusKey,
+  timestamp,
+}) {
   if (!scenario) {
     return (
       <div className="wave-graph wave-graph--loading">
-        <p>Receiving telemetry stream...</p>
+        <p>Waiting for sensor telemetry...</p>
       </div>
     );
   }
 
-  const times = getRealtimeTimestamps();
-  const current = THRESHOLDS[scenario.level - 1] || THRESHOLDS[0];
+  const timeline = getRealtimeTimeline();
+
+// The injected backend value is already in feet.
+const waterLevelFeet = Number(scenario.waterLevelCm) || 0;
+
+// Convert to centimeters only for graph positioning.
+const waterLevelCm = waterLevelFeet * 30.48;
+
+// Display the original injected value in feet.
+const currentLevelFeet = waterLevelFeet;
+
+// Determine the active level using the detected water level.
+const current =
+  [...THRESHOLDS]
+    .sort((a, b) => a.cm - b.cm)
+    .filter((threshold) => waterLevelCm >= threshold.cm)
+    .pop() || THRESHOLDS[0];
+
+  // Highest threshold first.
   const gridLines = [...THRESHOLDS].reverse();
-  const areaPath = `M 0 300 ${scenario.path.replace('M', 'L')} L 800 300 Z`;
+
+  // Preserve the path generated by apiService.js.
+  const areaPath = `M 0 300 ${scenario.path.replace(
+    'M',
+    'L'
+  )} L 800 300 Z`;
+
+  // Position the current reading dot based on the injected water level.
+const markerY = getLevelY(waterLevelCm);
+
+  const tooltipY = Math.max(
+    5,
+    Math.min(
+      (markerY / GRAPH_HEIGHT) * 100,
+      90
+    )
+  );
 
   return (
     <div className="wave-graph" data-status={statusKey}>
 
+      {/* HEADER */}
       <div className="wave-graph__header">
         <div className="wave-graph__heading">
           <span className="wave-graph__heading-dot"></span>
-          <h3 className="wave-graph__title">FLOOD LEVEL WAVE GRAPH</h3>
+
+          <h3 className="wave-graph__title">
+            FLOOD LEVEL WAVE GRAPH
+          </h3>
         </div>
+
         <div className="wave-graph__live">
-          <span className="wave-graph__live-dot anim-ping"></span>
+          <span className="wave-graph__live-dot"></span>
           <span>{timestamp}</span>
         </div>
       </div>
 
+      {/* GRAPH */}
       <div className="wave-graph__box">
-        <div className="wave-graph__layer wave-graph__photo" />
 
-        <div className="wave-graph__layer wave-graph__bands">
-          {BANDS.map((band) => (
-            <div key={band} className={`wave-graph__band--${band}`}></div>
-          ))}
-        </div>
+        <div className="wave-graph__plot">
 
-        <div className="wave-graph__layer wave-graph__rows">
-          {gridLines.map((t) => (
-            <div
-              key={t.level}
-              className="wave-graph__row"
-              data-status={t.status}
-              data-active={t.level === scenario.level}
+          {/* BACKGROUND */}
+          <div className="wave-graph__photo"></div>
+
+          {/* COLORED GRAPH ZONES */}
+          <div className="wave-graph__bands">
+            {BANDS.map((band) => (
+              <div
+                key={band}
+                className={`wave-graph__band--${band}`}
+              />
+            ))}
+          </div>
+
+          {/* HUMAN AND CAR ILLUSTRATIONS */}
+<div className="wave-graph__illustrations">
+
+ <img
+  src={personImage}
+  alt="Person with umbrella"
+  className="wave-graph__human"
+  aria-hidden="true"
+/>
+
+  {/* CAR - FAR RIGHT */}
+  <img
+    src={carImage}
+    alt=""
+    className="wave-graph__car"
+    aria-hidden="true"
+  />
+
+</div>
+
+          {/* THRESHOLD LINES */}
+          <div className="wave-graph__rows">
+            {gridLines.map((threshold) => {
+              const thresholdY = getLevelY(threshold.cm);
+
+              return (
+                <div
+  key={threshold.level}
+  className="wave-graph__row"
+  data-status={threshold.status}
+  data-active={threshold.level === current.level}
+  style={{
+    top: getPositionPercentage(thresholdY),
+  }}
+>
+  <span className="wave-graph__tag">
+    L{threshold.level}: {threshold.name} ({threshold.ft.toFixed(2)} ft)
+  </span>
+</div>
+              );
+            })}
+          </div>
+
+          {/* WATER GRAPH */}
+          <div className="wave-graph__water">
+            <svg
+              className="wave-graph__svg"
+              viewBox="0 0 800 300"
+              preserveAspectRatio="none"
             >
-              <span className="wave-graph__tag">
-                L{t.level}: {t.name} ({t.cm.toFixed(1)}cm)
-              </span>
-              <span className="wave-graph__tag wave-graph__tag--status">
-                {STATUS[t.status]?.label || 'Normal'}
-              </span>
-            </div>
-          ))}
-        </div>
+              <defs>
+                <linearGradient
+                  id="waterGrad"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop
+                    offset="0%"
+                    className="wave-graph__stop-top"
+                  />
 
-        <div className="wave-graph__water">
-          <svg className="wave-graph__svg" viewBox="0 0 800 300" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" className="wave-graph__stop-top" />
-                <stop offset="100%" className="wave-graph__stop-bottom" />
-              </linearGradient>
-            </defs>
+                  <stop
+                    offset="100%"
+                    className="wave-graph__stop-bottom"
+                  />
+                </linearGradient>
+              </defs>
 
-            {/* SCALE-ACCURATE SILHOUETTES */}
-            <g className="wave-graph__illustrations" opacity="0.4">
-              
-              {/* 4'11" Human - Ground is at Y=290, Chest hits perfectly at L7 (Y=73) */}
-              <g id="human-scale" transform="translate(40, 0)">
-                <circle cx="25" cy="30" r="14" fill="#ffffff" />
-                {/* Torso */}
-                <path d="M 12 50 L 38 50 L 34 135 L 16 135 Z" fill="#ffffff" />
-                {/* Arms */}
-                <rect x="2" y="50" width="8" height="85" rx="4" fill="#ffffff" />
-                <rect x="40" y="50" width="8" height="85" rx="4" fill="#ffffff" />
-                {/* Legs down to Y=290 */}
-                <rect x="15" y="130" width="10" height="160" rx="4" fill="#ffffff" />
-                <rect x="25" y="130" width="10" height="160" rx="4" fill="#ffffff" />
-              </g>
+              {/* WATER FILL */}
+              <path
+                d={areaPath}
+                fill="url(#waterGrad)"
+              />
 
-              {/* Realistic Sedan (Toyota Vios Profile) */}
-              <g id="car-scale" transform="translate(140, 0)">
-                {/* Car Body - Roof peaks below L7, chassis aligns with human hips */}
-                <path d="M 50 160 Q 90 150 120 100 Q 180 85 220 85 Q 260 95 300 135 L 350 140 Q 370 145 370 170 L 370 230 Q 365 240 340 240 L 40 240 Q 10 240 10 200 L 20 170 Z" fill="#ffffff" />
-                
-                {/* Windows */}
-                <path d="M 130 105 Q 170 95 210 95 L 210 140 L 95 140 Q 110 120 130 105 Z" fill="#0d1b2a" opacity="0.8" />
-                <path d="M 220 95 Q 250 100 280 135 L 220 135 Z" fill="#0d1b2a" opacity="0.8" />
-                
-                {/* Tires - Radius 35 hits exactly at L5 (66.1cm) */}
-                <circle cx="90" cy="240" r="35" fill="#0d1b2a" stroke="#ffffff" strokeWidth="4" />
-                <circle cx="290" cy="240" r="35" fill="#0d1b2a" stroke="#ffffff" strokeWidth="4" />
-              </g>
-            </g>
+              {/* WATER CURVE */}
+              <path
+                d={scenario.path}
+                className="wave-graph__line"
+              />
 
-            {/* WATER ANIMATION & LINE */}
-            <path d={areaPath} fill="url(#waterGrad)" />
-            <path d={scenario.path} className="wave-graph__line" />
+              {/* CURRENT READING MARKER */}
+<g transform={`translate(600, ${markerY})`}>
+  {/* Dashed line starts at the dot and extends to the bottom */}
+  <line
+    x1="0"
+    y1="0"
+    x2="0"
+    y2={300 - markerY}
+    className="wave-graph__guide"
+  />
 
-            <g transform={`translate(600, ${scenario.pointY})`}>
-              <line x1="0" y1="-160" x2="0" y2="140" className="wave-graph__guide" />
-              <circle r="7" className="wave-graph__dot" />
-            </g>
-          </svg>
+  {/* Current water level dot */}
+  <circle
+    cx="0"
+    cy="0"
+    r="7"
+    className="wave-graph__dot"
+  />
+</g>
+            </svg>
 
-          <div className="wave-graph__tooltip" style={{ top: scenario.tooltipTop }}>
-            <div className="wave-graph__tip-row">
-              <span className="wave-graph__tip-value">{scenario.waterLevelCm.toFixed(2)}</span>
-              <span className="wave-graph__tip-unit">cm</span>
-            </div>
-            <div className="wave-graph__tip-level">
-              Level {current.level}: {current.name}
+            {/* CURRENT WATER LEVEL TOOLTIP */}
+            <div
+  className="wave-graph__tooltip"
+  data-status={current.status}
+  style={{
+    top: `${tooltipY}%`,
+    left: '75%',
+  }}
+>
+              <div className="wave-graph__tip-row">
+                <span className="wave-graph__tip-value">
+                  {currentLevelFeet.toFixed(2)}
+                </span>
+
+                <span className="wave-graph__tip-unit">
+                  ft
+                </span>
+              </div>
+
+              <div className="wave-graph__tip-level">
+  Level {current.level}: {current.name}
+</div>
             </div>
           </div>
         </div>
 
-        {/* DYNAMIC REAL-TIME TIMESTAMPS */}
+        {/* TIME LABELS */}
         <div className="wave-graph__times">
-          {times.map((time, i) => (
-            <span key={i} className={timeClass(i, times.length)}>{time}</span>
+          {timeline.map((time, i) => (
+            <span key={i}>{time}</span>
           ))}
         </div>
+
       </div>
     </div>
   );
